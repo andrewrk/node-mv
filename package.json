@@ -1,6 +1,6 @@
 {
   "name": "mv",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "fs.rename but works across devices. same as the unix utility 'mv'",
   "main": "index.js",
   "scripts": {
@@ -20,6 +20,9 @@
   ],
   "author": "Andrew Kelley",
   "license": "BSD",
+  "engines": {
+    "node": ">=0.8.0 <0.10.0"
+  },
   "devDependencies": {
     "proxyquire": "~0.3.4",
     "mocha": "~1.6.0"
