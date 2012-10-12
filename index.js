@@ -4,7 +4,7 @@ fs = require('fs');
 
 module.exports = function mv(source, dest, cb){
   fs.rename(source, dest, function(err){
-    var ins, outs, had_error;
+    var ins, outs;
     if (!err) {
       return cb();
     }
@@ -13,19 +13,19 @@ module.exports = function mv(source, dest, cb){
     }
     ins = fs.createReadStream(source);
     outs = fs.createWriteStream(dest);
-    had_error = false;
-    ins.on('error', function(err){
-      had_error = true;
+    ins.once('error', function(err){
+      outs.removeAllListeners('error');
+      outs.removeAllListeners('close');
       outs.destroy();
       cb(err);
     });
-    outs.on('error', function(err){
-      had_error = true;
+    outs.once('error', function(err){
+      ins.removeAllListeners('error');
+      outs.removeAllListeners('close');
       ins.destroy();
       cb(err);
     });
-    outs.on('close', function(){
-      if (!had_error) cb();
+    outs.once('close', function(){
       fs.unlink(source, cb);
     });
     ins.pipe(outs);
