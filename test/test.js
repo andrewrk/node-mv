@@ -9,9 +9,6 @@ describe("mv", function() {
 
   // makes fs.rename return cross-device error.
   mock_fs = {};
-  mock_fs.createReadStream = fs.createReadStream;
-  mock_fs.createWriteStream = fs.createWriteStream;
-  mock_fs.unlink = fs.unlink;
   mock_fs.rename = function(src, dest, cb) {
     setTimeout(function() {
       var err;
