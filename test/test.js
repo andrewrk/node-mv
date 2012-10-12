@@ -67,4 +67,20 @@ describe("mv", function() {
       });
     });
   });
+
+  it("should move folders across devices", function (done) {
+    var mv;
+
+    mv = proxyquire.resolve('../index', __dirname, {fs: mock_fs});
+
+    mv("test/a-folder", "test/a-folder-dest", function (err) {
+      assert.ifError(err);
+      fs.readFile("test/a-folder-dest/another-folder/file3", 'utf8', function (err, contents) {
+        assert.ifError(err);
+        assert.strictEqual(contents, "knuckles\n");
+        // move it back
+        mv("test/a-folder-dest", "test/a-folder", done);
+      });
+    });
+  });
 });
