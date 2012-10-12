@@ -14,8 +14,9 @@ describe("mv", function() {
       assert.ifError(err);
       fs.readFile("test/a-file-dest", 'utf8', function (err, contents) {
         assert.ifError(err);
-        assert.strictEqual(contents, "sonic the hedgehog");
-        done();
+        assert.strictEqual(contents, "sonic the hedgehog\n");
+        // move it back
+        mv("test/a-file-dest", "test/a-file", done);
       });
     });
   });
