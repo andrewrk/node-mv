@@ -50,18 +50,18 @@ function moveDirAcrossDevice(source, dest, cb) {
   child = require('child_process').spawn('mv', [source, dest], {stdio: 'pipe'});
   child.stderr.setEncoding('utf8');
   child.stdout.setEncoding('utf8');
-  stderr = [];
-  stdout = [];
-  child.stderr.on('data', function(data) { stderr.push(data); });
-  child.stdout.on('data', function(data) { stdout.push(data); });
+  stderr = '';
+  stdout = '';
+  child.stderr.on('data', function(data) { stderr += data; });
+  child.stdout.on('data', function(data) { stdout += data; });
   child.on('close', function(code) {
     if (code === 0) {
       cb();
     } else {
       err = new Error("mv had nonzero exit code");
       err.code = 'RETCODE';
-      err.stdout = stdout.join('');
-      err.stderr = stderr.join('');
+      err.stdout = stdout;
+      err.stderr = stderr;
       cb(err);
     }
   });
