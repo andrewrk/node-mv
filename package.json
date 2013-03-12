@@ -21,7 +21,7 @@
   "author": "Andrew Kelley",
   "license": "BSD",
   "engines": {
-    "node": ">=0.8.0 <0.10.0"
+    "node": ">=0.8.0"
   },
   "devDependencies": {
     "proxyquire": "~0.3.4",
