@@ -1,6 +1,6 @@
 {
   "name": "mv",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "fs.rename but works across devices. same as the unix utility 'mv'",
   "main": "index.js",
   "scripts": {
