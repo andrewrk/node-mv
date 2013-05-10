@@ -13,14 +13,14 @@ module.exports = function mv(source, dest, cb){
       } else if (stats.isDirectory()) {
         moveDirAcrossDevice(source, dest, cb);
       } else {
-        var err;
-        err = new Error("source must be file or directory");
-        err.code = 'NOTFILEORDIR';
-        cb(err);
+        var err2;
+        err2 = new Error("source must be file or directory");
+        err2.code = 'NOTFILEORDIR';
+        cb(err2);
       }
     });
   });
-}
+};
 
 function moveFileAcrossDevice(source, dest, cb) {
   var ins, outs;
