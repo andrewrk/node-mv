@@ -26,5 +26,9 @@
   "devDependencies": {
     "proxyquire": "~0.3.4",
     "mocha": "~1.6.0"
+  },
+  "dependencies": {
+    "ncp": "~0.4.2",
+    "rimraf": "~2.2.2"
   }
 }

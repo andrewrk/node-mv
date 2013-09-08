@@ -1,27 +1,20 @@
-var assert, proxyquire, fs;
-
-assert = require('assert');
-proxyquire = require('proxyquire');
-fs = require('fs');
+var assert = require('assert');
+var proxyquire = require('proxyquire');
+var fs = require('fs');
 
 describe("mv", function() {
-  var mock_fs, mocked_mv;
-
   // makes fs.rename return cross-device error.
-  mock_fs = {};
+  var mock_fs = {};
   mock_fs.rename = function(src, dest, cb) {
     setTimeout(function() {
-      var err;
-      err = new Error();
+      var err = new Error();
       err.code = 'EXDEV';
       cb(err);
     }, 10);
   };
 
   it("should rename a file on the same device", function (done) {
-    var mv;
-
-    mv = proxyquire.resolve('../index', __dirname, {});
+    var mv = proxyquire.resolve('../index', __dirname, {});
 
     mv("test/a-file", "test/a-file-dest", function (err) {
       assert.ifError(err);
@@ -35,9 +28,7 @@ describe("mv", function() {
   });
 
   it("should work across devices", function (done) {
-    var mv;
-
-    mv = proxyquire.resolve('../index', __dirname, {fs: mock_fs});
+    var mv = proxyquire.resolve('../index', __dirname, {fs: mock_fs});
     mv("test/a-file", "test/a-file-dest", function (err) {
       assert.ifError(err);
       fs.readFile("test/a-file-dest", 'utf8', function (err, contents) {
@@ -50,9 +41,7 @@ describe("mv", function() {
   });
 
   it("should move folders", function (done) {
-    var mv;
-
-    mv = proxyquire.resolve('../index', __dirname, {});
+    var mv = proxyquire.resolve('../index', __dirname, {});
 
     mv("test/a-folder", "test/a-folder-dest", function (err) {
       assert.ifError(err);
@@ -66,9 +55,7 @@ describe("mv", function() {
   });
 
   it("should move folders across devices", function (done) {
-    var mv;
-
-    mv = proxyquire.resolve('../index', __dirname, {fs: mock_fs});
+    var mv = proxyquire.resolve('../index', __dirname, {fs: mock_fs});
 
     mv("test/a-folder", "test/a-folder-dest", function (err) {
       assert.ifError(err);

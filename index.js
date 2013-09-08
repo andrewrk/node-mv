@@ -1,8 +1,12 @@
-var fs;
+var fs = require('fs');
+var ncp = require('ncp').ncp;
+var rimraf = require('rimraf');
 
-fs = require('fs');
+module.exports = mv;
 
-module.exports = function mv(source, dest, cb){
+mv.limit = 16;
+
+function mv(source, dest, cb){
   fs.rename(source, dest, function(err){
     if (!err) return cb();
     if (err.code !== 'EXDEV') return cb(err);
@@ -20,12 +24,11 @@ module.exports = function mv(source, dest, cb){
       }
     });
   });
-};
+}
 
 function moveFileAcrossDevice(source, dest, cb) {
-  var ins, outs;
-  ins = fs.createReadStream(source);
-  outs = fs.createWriteStream(dest);
+  var ins = fs.createReadStream(source);
+  var outs = fs.createWriteStream(dest);
   ins.once('error', function(err){
     outs.removeAllListeners('error');
     outs.removeAllListeners('close');
@@ -44,25 +47,10 @@ function moveFileAcrossDevice(source, dest, cb) {
   ins.pipe(outs);
 }
 
-// TODO: do this natively instead of shelling out to `mv`
 function moveDirAcrossDevice(source, dest, cb) {
-  var child, stdout, stderr, err;
-  child = require('child_process').spawn('mv', [source, dest], {stdio: 'pipe'});
-  child.stderr.setEncoding('utf8');
-  child.stdout.setEncoding('utf8');
-  stderr = '';
-  stdout = '';
-  child.stderr.on('data', function(data) { stderr += data; });
-  child.stdout.on('data', function(data) { stdout += data; });
-  child.on('close', function(code) {
-    if (code === 0) {
-      cb();
-    } else {
-      err = new Error("mv had nonzero exit code");
-      err.code = 'RETCODE';
-      err.stdout = stdout;
-      err.stderr = stderr;
-      cb(err);
-    }
+  ncp.limit = mv.limit;
+  ncp(source, dest, function(err) {
+    if (err) return cb(err);
+    rimraf(source, cb);
   });
 }
