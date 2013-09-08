@@ -1,6 +1,7 @@
 var assert = require('assert');
 var proxyquire = require('proxyquire');
 var fs = require('fs');
+var rimraf = require('rimraf');
 
 describe("mv", function() {
   // makes fs.rename return cross-device error.
@@ -23,6 +24,32 @@ describe("mv", function() {
         assert.strictEqual(contents, "sonic the hedgehog\n");
         // move it back
         mv("test/a-file-dest", "test/a-file", done);
+      });
+    });
+  });
+
+  it("should not create directory structure by default", function (done) {
+    var mv = proxyquire.resolve('../index', __dirname, {});
+
+    mv("test/a-file", "test/does/not/exist/a-file-dest", function (err) {
+      assert.strictEqual(err.code, 'ENOENT');
+      done();
+    });
+  });
+
+  it("should create directory structure when mkdirp option set", function (done) {
+    var mv = proxyquire.resolve('../index', __dirname, {});
+
+    mv("test/a-file", "test/does/not/exist/a-file-dest", {mkdirp: true}, function (err) {
+      assert.ifError(err);
+      fs.readFile("test/does/not/exist/a-file-dest", 'utf8', function (err, contents) {
+        assert.ifError(err);
+        assert.strictEqual(contents, "sonic the hedgehog\n");
+        // move it back
+        mv("test/does/not/exist/a-file-dest", "test/a-file", function(err) {
+          assert.ifError(err);
+          rimraf("test/does", done);
+        });
       });
     });
   });

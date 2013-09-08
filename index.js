@@ -1,29 +1,50 @@
 var fs = require('fs');
 var ncp = require('ncp').ncp;
+var path = require('path');
 var rimraf = require('rimraf');
+var mkdirp = require('mkdirp');
 
 module.exports = mv;
 
 mv.limit = 16;
 
-function mv(source, dest, cb){
-  fs.rename(source, dest, function(err){
-    if (!err) return cb();
-    if (err.code !== 'EXDEV') return cb(err);
-    fs.stat(source, function (err, stats) {
+function mv(source, dest, options, cb){
+  if (typeof options === 'function') {
+    cb = options;
+    options = {};
+  }
+  if (options.mkdirp) {
+    mkdirs();
+  } else {
+    doRename();
+  }
+
+  function mkdirs() {
+    mkdirp(path.dirname(dest), function(err) {
       if (err) return cb(err);
-      if (stats.isFile()) {
-        moveFileAcrossDevice(source, dest, cb);
-      } else if (stats.isDirectory()) {
-        moveDirAcrossDevice(source, dest, cb);
-      } else {
-        var err2;
-        err2 = new Error("source must be file or directory");
-        err2.code = 'NOTFILEORDIR';
-        cb(err2);
-      }
+      doRename();
     });
-  });
+  }
+
+  function doRename() {
+    fs.rename(source, dest, function(err) {
+      if (!err) return cb();
+      if (err.code !== 'EXDEV') return cb(err);
+      fs.stat(source, function (err, stats) {
+        if (err) return cb(err);
+        if (stats.isFile()) {
+          moveFileAcrossDevice(source, dest, cb);
+        } else if (stats.isDirectory()) {
+          moveDirAcrossDevice(source, dest, cb);
+        } else {
+          var err2;
+          err2 = new Error("source must be file or directory");
+          err2.code = 'NOTFILEORDIR';
+          cb(err2);
+        }
+      });
+    });
+  }
 }
 
 function moveFileAcrossDevice(source, dest, cb) {

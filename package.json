@@ -4,7 +4,7 @@
   "description": "fs.rename but works across devices. same as the unix utility 'mv'",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha test/test.js --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "ncp": "~0.4.2",
-    "rimraf": "~2.2.2"
+    "rimraf": "~2.2.2",
+    "mkdirp": "~0.3.5"
   }
 }
