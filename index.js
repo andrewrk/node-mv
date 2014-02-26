@@ -6,14 +6,16 @@ var mkdirp = require('mkdirp');
 
 module.exports = mv;
 
-mv.limit = 16;
-
 function mv(source, dest, options, cb){
   if (typeof options === 'function') {
     cb = options;
     options = {};
   }
-  if (options.mkdirp) {
+  var shouldMkdirp = !!options.mkdirp;
+  var clobber = options.clobber !== false;
+  var limit = options.limit || 16;
+
+  if (shouldMkdirp) {
     mkdirs();
   } else {
     doRename();
@@ -27,51 +29,77 @@ function mv(source, dest, options, cb){
   }
 
   function doRename() {
-    fs.rename(source, dest, function(err) {
-      if (!err) return cb();
-      if (err.code !== 'EXDEV') return cb(err);
-      fs.stat(source, function (err, stats) {
-        if (err) return cb(err);
-        if (stats.isFile()) {
-          moveFileAcrossDevice(source, dest, cb);
-        } else if (stats.isDirectory()) {
-          moveDirAcrossDevice(source, dest, cb);
-        } else {
-          var err2;
-          err2 = new Error("source must be file or directory");
-          err2.code = 'NOTFILEORDIR';
-          cb(err2);
-        }
+    if (clobber) {
+      fs.rename(source, dest, function(err) {
+        if (!err) return cb();
+        if (err.code !== 'EXDEV') return cb(err);
+        moveFileAcrossDevice(source, dest, clobber, limit, cb);
       });
-    });
+    } else {
+      fs.link(source, dest, function(err) {
+        if (err) {
+          if (err.code === 'EXDEV') {
+            moveFileAcrossDevice(source, dest, clobber, limit, cb);
+            return;
+          }
+          if (err.code === 'EISDIR' || err.code === 'EPERM') {
+            moveDirAcrossDevice(source, dest, clobber, limit, cb);
+            return;
+          }
+          cb(err);
+          return;
+        }
+        fs.unlink(source, cb);
+      });
+    }
   }
 }
 
-function moveFileAcrossDevice(source, dest, cb) {
+function moveFileAcrossDevice(source, dest, clobber, limit, cb) {
+  var outFlags = clobber ? 'w' : 'wx';
   var ins = fs.createReadStream(source);
-  var outs = fs.createWriteStream(dest);
-  ins.once('error', function(err){
-    outs.removeAllListeners('error');
-    outs.removeAllListeners('close');
-    outs.destroy();
-    cb(err);
-  });
-  outs.once('error', function(err){
-    ins.removeAllListeners('error');
-    outs.removeAllListeners('close');
+  var outs = fs.createWriteStream(dest, {flags: outFlags});
+  ins.on('error', function(err){
     ins.destroy();
+    outs.destroy();
+    outs.removeListener('close', onClose);
+    if (err.code === 'EISDIR' || err.code === 'EPERM') {
+      moveDirAcrossDevice(source, dest, clobber, limit, cb);
+    } else {
+      cb(err);
+    }
+  });
+  outs.on('error', function(err){
+    ins.destroy();
+    outs.destroy();
+    outs.removeListener('close', onClose);
     cb(err);
   });
-  outs.once('close', function(){
-    fs.unlink(source, cb);
-  });
+  outs.once('close', onClose);
   ins.pipe(outs);
+  function onClose(){
+    fs.unlink(source, cb);
+  }
 }
 
-function moveDirAcrossDevice(source, dest, cb) {
-  ncp.limit = mv.limit;
-  ncp(source, dest, function(err) {
-    if (err) return cb(err);
-    rimraf(source, cb);
-  });
+function moveDirAcrossDevice(source, dest, clobber, limit, cb) {
+  var options = {
+    stopOnErr: true,
+    clobber: false,
+    limit: limit,
+  };
+  if (clobber) {
+    rimraf(dest, function(err) {
+      if (err) return cb(err);
+      startNcp();
+    });
+  } else {
+    startNcp();
+  }
+  function startNcp() {
+    ncp(source, dest, options, function(errList) {
+      if (errList) return cb(errList[0]);
+      rimraf(source, cb);
+    });
+  }
 }

@@ -28,6 +28,15 @@ describe("mv", function() {
     });
   });
 
+  it("should not overwrite if clobber = false", function (done) {
+    var mv = proxyquire.resolve('../index', __dirname, {});
+
+    mv("test/a-file", "test/a-folder/another-file", {clobber: false}, function (err) {
+      assert.ok(err && err.code === 'EEXIST', "throw EEXIST");
+      done();
+    });
+  });
+
   it("should not create directory structure by default", function (done) {
     var mv = proxyquire.resolve('../index', __dirname, {});
 
