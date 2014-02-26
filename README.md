@@ -1,4 +1,4 @@
-[![Build Status](https://secure.travis-ci.org/superjoe30/node-mv.png)](http://travis-ci.org/superjoe30/node-mv)
+[![Build Status](https://secure.travis-ci.org/andrewrk/node-mv.png)](http://travis-ci.org/andrewrk/node-mv)
 
 Usage:
 ------
