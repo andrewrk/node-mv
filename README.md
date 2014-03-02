@@ -25,7 +25,9 @@ mv('source/dir', 'dest/a/b/c/dir', {mkdirp: true}, function(err) {
 
 Another example:
 
+```js
 mv('source/file', 'dest/file', {clobber: false}, function(err) {
   // done. If 'dest/file' exists, an error is returned
   // with err.code === 'EEXIST'.
 });
+```
