@@ -15,7 +15,7 @@ describe("mv", function() {
   };
 
   it("should rename a file on the same device", function (done) {
-    var mv = proxyquire.resolve('../index', __dirname, {});
+    var mv = proxyquire('../index', {});
 
     mv("test/a-file", "test/a-file-dest", function (err) {
       assert.ifError(err);
@@ -29,7 +29,7 @@ describe("mv", function() {
   });
 
   it("should not overwrite if clobber = false", function (done) {
-    var mv = proxyquire.resolve('../index', __dirname, {});
+    var mv = proxyquire('../index', {});
 
     mv("test/a-file", "test/a-folder/another-file", {clobber: false}, function (err) {
       assert.ok(err && err.code === 'EEXIST', "throw EEXIST");
@@ -38,7 +38,7 @@ describe("mv", function() {
   });
 
   it("should not create directory structure by default", function (done) {
-    var mv = proxyquire.resolve('../index', __dirname, {});
+    var mv = proxyquire('../index', {});
 
     mv("test/a-file", "test/does/not/exist/a-file-dest", function (err) {
       assert.strictEqual(err.code, 'ENOENT');
@@ -47,7 +47,7 @@ describe("mv", function() {
   });
 
   it("should create directory structure when mkdirp option set", function (done) {
-    var mv = proxyquire.resolve('../index', __dirname, {});
+    var mv = proxyquire('../index', {});
 
     mv("test/a-file", "test/does/not/exist/a-file-dest", {mkdirp: true}, function (err) {
       assert.ifError(err);
@@ -64,7 +64,7 @@ describe("mv", function() {
   });
 
   it("should work across devices", function (done) {
-    var mv = proxyquire.resolve('../index', __dirname, {fs: mock_fs});
+    var mv = proxyquire('../index', {fs: mock_fs});
     mv("test/a-file", "test/a-file-dest", function (err) {
       assert.ifError(err);
       fs.readFile("test/a-file-dest", 'utf8', function (err, contents) {
@@ -77,7 +77,7 @@ describe("mv", function() {
   });
 
   it("should move folders", function (done) {
-    var mv = proxyquire.resolve('../index', __dirname, {});
+    var mv = proxyquire('../index', {});
 
     mv("test/a-folder", "test/a-folder-dest", function (err) {
       assert.ifError(err);
@@ -91,7 +91,7 @@ describe("mv", function() {
   });
 
   it("should move folders across devices", function (done) {
-    var mv = proxyquire.resolve('../index', __dirname, {fs: mock_fs});
+    var mv = proxyquire('../index', {fs: mock_fs});
 
     mv("test/a-folder", "test/a-folder-dest", function (err) {
       assert.ifError(err);
