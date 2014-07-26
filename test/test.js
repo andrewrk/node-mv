@@ -1,22 +1,28 @@
 var assert = require('assert');
-var proxyquire = require('proxyquire');
 var fs = require('fs');
 var rimraf = require('rimraf');
+var describe = global.describe;
+var it = global.it;
+var mv = require('../');
 
-describe("mv", function() {
+var realFsRename = fs.rename;
+function overrideFsRename() {
   // makes fs.rename return cross-device error.
-  var mock_fs = {};
-  mock_fs.rename = function(src, dest, cb) {
+  fs.rename = function(src, dest, cb) {
     setTimeout(function() {
       var err = new Error();
       err.code = 'EXDEV';
       cb(err);
     }, 10);
   };
+}
 
+function restoreFsRename() {
+  fs.rename = realFsRename;
+}
+
+describe("mv", function() {
   it("should rename a file on the same device", function (done) {
-    var mv = proxyquire('../index', {});
-
     mv("test/a-file", "test/a-file-dest", function (err) {
       assert.ifError(err);
       fs.readFile("test/a-file-dest", 'utf8', function (err, contents) {
@@ -29,8 +35,6 @@ describe("mv", function() {
   });
 
   it("should not overwrite if clobber = false", function (done) {
-    var mv = proxyquire('../index', {});
-
     mv("test/a-file", "test/a-folder/another-file", {clobber: false}, function (err) {
       assert.ok(err && err.code === 'EEXIST', "throw EEXIST");
       done();
@@ -38,8 +42,6 @@ describe("mv", function() {
   });
 
   it("should not create directory structure by default", function (done) {
-    var mv = proxyquire('../index', {});
-
     mv("test/a-file", "test/does/not/exist/a-file-dest", function (err) {
       assert.strictEqual(err.code, 'ENOENT');
       done();
@@ -47,8 +49,6 @@ describe("mv", function() {
   });
 
   it("should create directory structure when mkdirp option set", function (done) {
-    var mv = proxyquire('../index', {});
-
     mv("test/a-file", "test/does/not/exist/a-file-dest", {mkdirp: true}, function (err) {
       assert.ifError(err);
       fs.readFile("test/does/not/exist/a-file-dest", 'utf8', function (err, contents) {
@@ -64,21 +64,22 @@ describe("mv", function() {
   });
 
   it("should work across devices", function (done) {
-    var mv = proxyquire('../index', {fs: mock_fs});
+    overrideFsRename();
     mv("test/a-file", "test/a-file-dest", function (err) {
       assert.ifError(err);
       fs.readFile("test/a-file-dest", 'utf8', function (err, contents) {
         assert.ifError(err);
         assert.strictEqual(contents, "sonic the hedgehog\n");
         // move it back
-        mv("test/a-file-dest", "test/a-file", done);
+        mv("test/a-file-dest", "test/a-file", function(err) {
+          restoreFsRename();
+          done(err);
+        });
       });
     });
   });
 
   it("should move folders", function (done) {
-    var mv = proxyquire('../index', {});
-
     mv("test/a-folder", "test/a-folder-dest", function (err) {
       assert.ifError(err);
       fs.readFile("test/a-folder-dest/another-file", 'utf8', function (err, contents) {
@@ -91,15 +92,17 @@ describe("mv", function() {
   });
 
   it("should move folders across devices", function (done) {
-    var mv = proxyquire('../index', {fs: mock_fs});
-
+    overrideFsRename();
     mv("test/a-folder", "test/a-folder-dest", function (err) {
       assert.ifError(err);
       fs.readFile("test/a-folder-dest/another-folder/file3", 'utf8', function (err, contents) {
         assert.ifError(err);
         assert.strictEqual(contents, "knuckles\n");
         // move it back
-        mv("test/a-folder-dest", "test/a-folder", done);
+        mv("test/a-folder-dest", "test/a-folder", function(err) {
+          restoreFsRename();
+          done(err);
+        });
       });
     });
   });
