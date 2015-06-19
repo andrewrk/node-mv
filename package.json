@@ -24,12 +24,12 @@
     "node": ">=0.8.0"
   },
   "devDependencies": {
-    "mocha": "~1.21.0"
+    "mocha": "~2.2.5"
   },
   "dependencies": {
-    "mkdirp": "~0.5.0",
-    "ncp": "~0.6.0",
-    "rimraf": "~2.2.8"
+    "mkdirp": "~0.5.1",
+    "ncp": "~2.0.0",
+    "rimraf": "~2.4.0"
   },
   "bugs": {
     "url": "https://github.com/andrewrk/node-mv/issues"
